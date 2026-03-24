@@ -3,83 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Server Diagnostics</title>
+    <title>Server Metrics Dashboard</title>
     <style>
-        body { 
-            font-family: system-ui, -apple-system, sans-serif; 
-            background-color: #0f172a; 
-            color: #f8fafc; 
-            display: flex; 
-            justify-content: center; 
-            padding-top: 4rem;
+        :root {
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --text-muted: #666666;
+            --accent: #0078d4; /* Azure Blue */
         }
-        .dashboard { 
-            background: #1e293b; 
-            padding: 2rem; 
-            border-radius: 12px; 
-            width: 100%; 
-            max-width: 450px; 
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
-        .metric-row { 
-            display: flex; 
-            justify-content: space-between; 
-            padding: 0.75rem 0; 
-            border-bottom: 1px solid #334155; 
+        h1 {
+            color: var(--accent);
+            margin-bottom: 2rem;
         }
-        .metric-row:last-child { border-bottom: none; }
-        .label { color: #94a3b8; font-weight: 500; }
-        .value { font-family: monospace; font-size: 1.1rem; color: #38bdf8; }
-        .status-connected { color: #22c55e; }
-        .status-failed { color: #ef4444; }
-        .status-none { color: #f59e0b; }
-        .error { color: #ef4444; text-align: center; }
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 900px;
+        }
+        .card {
+            background-color: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            text-align: center;
+            border-top: 4px solid var(--accent);
+        }
+        .card h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .card p {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .status-Connected { color: #107c10; } /* Green */
+        .status-Disconnected, .status-Connection-Lost { color: #d13438; } /* Red */
+        
+        #error-message {
+            color: #d13438;
+            font-weight: bold;
+            margin-top: 1rem;
+            display: none;
+        }
     </style>
 </head>
 <body>
 
-    <div class="dashboard">
-        <h2 style="margin-top: 0; border-bottom: 2px solid #3b82f6; padding-bottom: 0.5rem;">Azure Node Instance</h2>
-        <div id="metrics-container">
-            <div class="metric-row"><span class="label">Status</span><span class="value">Initializing...</span></div>
-        </div>
+    <h1>System Metrics Dashboard</h1>
+    
+    <div class="dashboard" id="metrics-container">
+        <p>Loading metrics...</p>
     </div>
+    <div id="error-message">Failed to load metrics. Check console for details.</div>
 
     <script>
-        const formatBytes = (bytes) => (bytes / (1024 ** 3)).toFixed(2) + ' GB';
-        
-        const getDbStatusClass = (status) => {
-            if (status === 'Connected') return 'status-connected';
-            if (status === 'Connection Failed') return 'status-failed';
-            return 'status-none';
-        };
+        // Because the frontend and backend are hosted together, 
+        // we can use a relative path to hit your API.
+        const API_URL = '/api/metrics';
+
+        // Helper function to format bytes into GB/MB
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Helper function to format uptime into a readable string
+        function formatUptime(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            return `${h}h ${m}m`;
+        }
 
         async function fetchMetrics() {
-            const container = document.getElementById('metrics-container');
-            
             try {
-                const response = await fetch('/api/metrics');
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error('Network response was not ok');
                 const data = await response.json();
+
+                const container = document.getElementById('metrics-container');
                 
+                // Replace spaces with hyphens for the CSS class
+                const dbStatusClass = `status-${data.database.replace(/\s+/g, '-')}`;
+
                 container.innerHTML = `
-                    <div class="metric-row"><span class="label">OS Platform</span><span class="value">${data.platform}</span></div>
-                    <div class="metric-row"><span class="label">Memory (Free)</span><span class="value">${formatBytes(data.freemem)} / ${formatBytes(data.totalmem)}</span></div>
-                    <div class="metric-row"><span class="label">Uptime</span><span class="value">${Math.floor(data.uptime)}s</span></div>
-                    <div class="metric-row">
-                        <span class="label">Database</span>
-                        <span class="value ${getDbStatusClass(data.database)}">${data.database}</span>
+                    <div class="card">
+                        <h3>Database Status</h3>
+                        <p class="${dbStatusClass}">${data.database}</p>
+                    </div>
+                    <div class="card">
+                        <h3>Uptime</h3>
+                        <p>${formatUptime(data.uptime)}</p>
+                    </div>
+                    <div class="card">
+                        <h3>Platform</h3>
+                        <p>${data.platform}</p>
+                    </div>
+                    <div class="card">
+                        <h3>CPU Cores</h3>
+                        <p>${data.cpus}</p>
+                    </div>
+                    <div class="card">
+                        <h3>Free Memory</h3>
+                        <p>${formatBytes(data.freemem)}</p>
+                    </div>
+                    <div class="card">
+                        <h3>Total Memory</h3>
+                        <p>${formatBytes(data.totalmem)}</p>
                     </div>
                 `;
+                document.getElementById('error-message').style.display = 'none';
             } catch (error) {
-                console.error('Polling error:', error);
-                container.innerHTML = `<div class="error">Connection to server lost. Retrying...</div>`;
+                console.error("Error fetching metrics:", error);
+                document.getElementById('metrics-container').innerHTML = '';
+                document.getElementById('error-message').style.display = 'block';
             }
         }
 
+        // Fetch immediately on load, then update every 5 seconds
         fetchMetrics();
-        setInterval(fetchMetrics, 3000);
+        setInterval(fetchMetrics, 5000);
     </script>
 
 </body>
