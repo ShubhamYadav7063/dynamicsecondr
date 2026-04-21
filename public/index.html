@@ -4,149 +4,360 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Azure Notes App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
     <style>
         :root {
-            --bg-color: #f0f2f5;
-            --primary: #0078d4;
-            --danger: #d13438;
-            --text-dark: #333;
-            --text-light: #666;
-            --white: #ffffff;
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --radius: 12px;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-dark);
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-        h1 {
-            text-align: center;
-            color: var(--primary);
-        }
-        /* Form Styling */
-        .note-form {
-            background: var(--white);
-            padding: 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 2rem;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            align-items: center;
         }
+
+        /* Header Styling */
+        header {
+            width: 100%;
+            background-color: var(--bg-card);
+            padding: 1.5rem 0;
+            box-shadow: var(--shadow-sm);
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        header h1 i { color: var(--primary); }
+
+        /* Main Container Layout */
+        main {
+            width: 100%;
+            max-width: 1000px;
+            padding: 0 1.5rem;
+            box-sizing: border-box;
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        /* Responsive Layout for Mobile */
+        @media (max-width: 768px) {
+            main { grid-template-columns: 1fr; }
+        }
+
+        /* Input Form Card */
+        .form-container {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-md);
+            position: sticky;
+            top: 2rem;
+        }
+
+        .form-container h2 {
+            margin-top: 0;
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
         input, textarea {
             width: 100%;
-            padding: 0.8rem;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 1rem;
-            box-sizing: border-box;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.95rem;
             font-family: inherit;
+            box-sizing: border-box;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+        }
+
         textarea {
             resize: vertical;
-            min-height: 80px;
+            min-height: 120px;
         }
+
         button {
+            width: 100%;
             background-color: var(--primary);
-            color: var(--white);
+            color: white;
             border: none;
-            padding: 0.8rem;
+            padding: 0.875rem;
+            border-radius: 8px;
             font-size: 1rem;
-            border-radius: 4px;
+            font-weight: 500;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background-color 0.2s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
-        button:hover { background-color: #005a9e; }
-        
+
+        button:hover { background-color: var(--primary-hover); }
+        button:active { transform: scale(0.98); }
+
         /* Notes Grid */
         .notes-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 1.5rem;
         }
+
+        /* Individual Note Card */
         .note-card {
-            background: var(--white);
+            background: var(--bg-card);
             padding: 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
-            border-top: 4px solid var(--primary);
+            transition: box-shadow 0.2s, transform 0.2s;
+            animation: fadeIn 0.4s ease-out forwards;
         }
+
+        .note-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+        }
+
         .note-card h3 {
-            margin: 0 0 0.5rem 0;
-            font-size: 1.25rem;
+            margin: 0;
+            font-size: 1.15rem;
+            color: var(--text-main);
+            word-break: break-word;
         }
+
+        .note-date {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
         .note-card p {
-            margin: 0 0 1rem 0;
-            color: var(--text-light);
+            margin: 0 0 1.5rem 0;
+            color: var(--text-muted);
+            line-height: 1.5;
             flex-grow: 1;
-            white-space: pre-wrap; /* Keeps line breaks from the textarea */
+            white-space: pre-wrap;
+            word-break: break-word;
         }
-        .delete-btn {
-            background-color: var(--danger);
-            padding: 0.5rem;
-            font-size: 0.9rem;
-            align-self: flex-end;
+
+        .icon-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.25rem;
+            width: auto;
+            cursor: pointer;
+            transition: color 0.2s;
         }
-        .delete-btn:hover { background-color: #a80000; }
+
+        .icon-btn:hover {
+            background: none;
+            color: var(--danger);
+        }
+
+        /* Empty State */
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+            background: transparent;
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: #cbd5e1;
+            margin-bottom: 1rem;
+        }
+
+        /* Toast Notifications */
+        #toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .toast {
+            background-color: var(--text-main);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            animation: slideIn 0.3s ease-out forwards;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(100%); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(100%); }
+        }
     </style>
 </head>
 <body>
 
-    <h1>My Azure Notes</h1>
+    <header>
+        <h1><i class="ph-fill ph-notebook"></i> Azure Notes Workspace</h1>
+    </header>
 
-    <form class="note-form" id="noteForm">
-        <input type="text" id="noteTitle" placeholder="Note Title" required>
-        <textarea id="noteContent" placeholder="Write your note here..."></textarea>
-        <button type="submit">Save Note</button>
-    </form>
+    <main>
+        <aside>
+            <form class="form-container" id="noteForm">
+                <h2>Create Note</h2>
+                <input type="text" id="noteTitle" placeholder="Title your thought..." required autocomplete="off">
+                <textarea id="noteContent" placeholder="Write the details here..."></textarea>
+                <button type="submit"><i class="ph-bold ph-plus"></i> Save Note</button>
+            </form>
+        </aside>
 
-    <div class="notes-grid" id="notesContainer">
-        </div>
+        <section class="notes-grid" id="notesContainer">
+            </section>
+    </main>
+
+    <div id="toast-container"></div>
 
     <script>
         const API_URL = '/api/notes';
 
-        // 1. Fetch and display notes when the page loads
+        // --- Utility Functions ---
+
+        // Format dates to look like "Mar 24, 2026"
+        function formatDate(dateString) {
+            const options = { month: 'short', day: 'numeric', year: 'numeric' };
+            return new Date(dateString).toLocaleDateString(undefined, options);
+        }
+
+        // Custom Toast Notification System
+        function showToast(message, icon = "ph-check-circle") {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `<i class="ph-fill ${icon}"></i> ${message}`;
+            
+            container.appendChild(toast);
+
+            // Remove the toast after 3 seconds
+            setTimeout(() => {
+                toast.style.animation = 'fadeOut 0.3s ease-in forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // --- Core Application Logic ---
+
         async function loadNotes() {
             try {
                 const response = await fetch(API_URL);
                 const notes = await response.json();
-                
                 const container = document.getElementById('notesContainer');
-                container.innerHTML = ''; // Clear current notes
+                
+                container.innerHTML = ''; 
 
                 if (notes.length === 0) {
-                    container.innerHTML = '<p style="text-align: center; grid-column: 1 / -1;">No notes yet. Create one above!</p>';
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="ph ph-folder-open"></i>
+                            <p>Your workspace is empty.</p>
+                            <p style="font-size: 0.85rem;">Create your first note on the left.</p>
+                        </div>
+                    `;
                     return;
                 }
 
                 notes.forEach(note => {
-                    // Create HTML for each note
                     const noteElement = document.createElement('div');
                     noteElement.className = 'note-card';
                     noteElement.innerHTML = `
-                        <h3>${note.title}</h3>
+                        <div class="note-header">
+                            <h3>${note.title}</h3>
+                            <button class="icon-btn" onclick="deleteNote('${note._id}')" title="Delete Note">
+                                <i class="ph-bold ph-trash"></i>
+                            </button>
+                        </div>
+                        <div class="note-date"><i class="ph ph-clock"></i> ${formatDate(note.createdAt)}</div>
                         <p>${note.content}</p>
-                        <button class="delete-btn" onclick="deleteNote('${note._id}')">Delete</button>
                     `;
                     container.appendChild(noteElement);
                 });
             } catch (error) {
                 console.error("Error loading notes:", error);
+                showToast("Failed to load notes", "ph-warning-circle");
             }
         }
 
-        // 2. Handle the form submission to create a new note
         document.getElementById('noteForm').addEventListener('submit', async (e) => {
-            e.preventDefault(); // Prevents the page from reloading
+            e.preventDefault();
             
             const titleInput = document.getElementById('noteTitle');
             const contentInput = document.getElementById('noteContent');
+            const submitBtn = e.target.querySelector('button');
+
+            // Visual feedback while saving
+            const originalBtnText = submitBtn.innerHTML;
+            submitBtn.innerHTML = `<i class="ph ph-spinner-gap"></i> Saving...`;
+            submitBtn.disabled = true;
 
             const newNote = {
                 title: titleInput.value,
@@ -154,42 +365,50 @@
             };
 
             try {
-                // Send the POST request to your backend
-                await fetch(API_URL, {
+                const response = await fetch(API_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json' // Tells the backend we are sending JSON
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(newNote)
                 });
 
-                // Clear the form and reload the notes
-                titleInput.value = '';
-                contentInput.value = '';
-                loadNotes();
+                if(response.ok) {
+                    titleInput.value = '';
+                    contentInput.value = '';
+                    showToast("Note saved successfully!");
+                    loadNotes();
+                } else {
+                    throw new Error("Failed to save");
+                }
             } catch (error) {
                 console.error("Error saving note:", error);
+                showToast("Error saving note", "ph-warning-circle");
+            } finally {
+                // Restore button state
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
             }
         });
 
-        // 3. Handle deleting a note
         async function deleteNote(noteId) {
-            // Ask for confirmation before deleting
-            if (!confirm("Are you sure you want to delete this note?")) return;
+            // Using browser confirm is safer for deletions to prevent accidental clicks
+            if (!confirm("Delete this note permanently?")) return;
 
             try {
-                await fetch(`${API_URL}/${noteId}`, {
+                const response = await fetch(`${API_URL}/${noteId}`, {
                     method: 'DELETE'
                 });
                 
-                // Reload the notes to reflect the deletion
-                loadNotes();
+                if(response.ok) {
+                    showToast("Note deleted", "ph-trash");
+                    loadNotes();
+                }
             } catch (error) {
                 console.error("Error deleting note:", error);
+                showToast("Failed to delete", "ph-warning-circle");
             }
         }
 
-        // Load notes immediately when the script runs
+        // Initialize the app
         loadNotes();
     </script>
 
